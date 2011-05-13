@@ -92,6 +92,17 @@
 }
 
 #pragma mark - LayoutSubViews
+
+-(void)updateSelectedStateOnView:(UIView *)view {
+	SEL setSelectedSelector     = @selector(setSelectedElement:);
+    if ([view conformsToProtocol:@protocol(V8HorizontalPickerElementState)] && 
+        [view respondsToSelector:setSelectedSelector]) {
+        // view's tag is it's index
+        BOOL isSelected = (currentSelectedIndex == [self indexForElement:view]);
+        [(UIView <V8HorizontalPickerElementState> *)view setSelectedElement:isSelected];
+    }
+}
+
 - (void)layoutSubviews {
 	[super layoutSubviews];
 
@@ -104,7 +115,6 @@
 
 	SEL titleForElementSelector = @selector(horizontalPickerView:titleForElementAtIndex:);
 	SEL viewForElementSelector  = @selector(horizontalPickerView:viewForElementAtIndex:);
-	SEL setSelectedSelector     = @selector(setSelectedElement:);
 
 	CGRect visibleBounds = [self bounds];
 	// remove any subviews that are no longer visible
@@ -116,11 +126,7 @@
 			[_reusableViews addObject:view];
             [view removeFromSuperview];
         } else { // if it is still visible, update it's selected state
-			if ([view respondsToSelector:setSelectedSelector]) {
-				// view's tag is it's index
-				BOOL isSelected = (currentSelectedIndex == [self indexForElement:view]);
-				[(V8HorizontalPickerLabel *)view setSelectedElement:isSelected];
-			}
+			[self updateSelectedStateOnView:view];
 		}
 	}
 
@@ -141,12 +147,15 @@
                     view = [self labelForForElementAtIndex:i withTitle:title];
                 } else if (self.delegate && [self.delegate respondsToSelector:viewForElementSelector]) {
                     view = [self.delegate horizontalPickerView:self viewForElementAtIndex:i];
+                    view.frame = [self frameForElementAtIndex:i];
                 }
 
                 if (view) {
                     // use the index as the tag so we can find it later
                     view.tag = [self tagForElementAtIndex:i];
                     [_scrollView addSubview:view];
+                    
+                    [self updateSelectedStateOnView:view];
                 }
             }
 		}
