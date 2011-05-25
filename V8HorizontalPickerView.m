@@ -19,8 +19,8 @@
 
 - (void)addScrollView;
 - (void)drawPositionIndicator;
-- (V8HorizontalPickerLabel *)labelForForElementAtIndex:(NSInteger)index withTitle:(NSString *)title;
-- (CGRect)frameForElementAtIndex:(NSInteger)index;
+- (V8HorizontalPickerLabel *)labelForForElementAtIndex:(NSInteger)elementIndex withTitle:(NSString *)title;
+- (CGRect)frameForElementAtIndex:(NSInteger)elementIndex;
 
 - (CGPoint)currentCenter;
 - (void)scrollToElementNearestToCenter;
@@ -28,12 +28,12 @@
 - (NSInteger)nearestElementToPoint:(CGPoint)point;
 - (NSInteger)elementContainingPoint:(CGPoint)point;
 
-- (NSInteger)offsetForElementAtIndex:(NSInteger)index;
-- (NSInteger)centerOfElementAtIndex:(NSInteger)index;
+- (NSInteger)offsetForElementAtIndex:(NSInteger)elementIndex;
+- (NSInteger)centerOfElementAtIndex:(NSInteger)elementIndex;
 
 - (void)scrollViewTapped:(UITapGestureRecognizer *)recognizer;
 
-- (NSInteger)tagForElementAtIndex:(NSInteger)index;
+- (NSInteger)tagForElementAtIndex:(NSInteger)elementIndex;
 - (NSInteger)indexForElement:(UIView *)element;
 @end
 
@@ -276,15 +276,15 @@
 }
 
 #pragma mark - Scroll To Element Method
-- (void)scrollToElement:(NSInteger)index animated:(BOOL)animate {
-	int x = [self centerOfElementAtIndex:index] - selectionPoint.x;
+- (void)scrollToElement:(NSInteger)elementIndex animated:(BOOL)animate {
+	int x = [self centerOfElementAtIndex:elementIndex] - selectionPoint.x;
 	[_scrollView setContentOffset:CGPointMake(x, 0) animated:animate];
-	currentSelectedIndex = index;
+	currentSelectedIndex = elementIndex;
 
 	// notify delegate of the selected index
 	SEL delegateCall = @selector(horizontalPickerView:didSelectElementAtIndex:);
 	if (self.delegate && [self.delegate respondsToSelector:delegateCall]) {
-		[self.delegate horizontalPickerView:self didSelectElementAtIndex:index];
+		[self.delegate horizontalPickerView:self didSelectElementAtIndex:elementIndex];
 	}
 }
 
@@ -372,8 +372,8 @@
 }
 
 // create a UILabel for this element.
-- (V8HorizontalPickerLabel *)labelForForElementAtIndex:(NSInteger)index withTitle:(NSString *)title {
-	CGRect labelFrame     = [self frameForElementAtIndex:index];
+- (V8HorizontalPickerLabel *)labelForForElementAtIndex:(NSInteger)elementIndex withTitle:(NSString *)title {
+	CGRect labelFrame     = [self frameForElementAtIndex:elementIndex];
 	V8HorizontalPickerLabel *elementLabel = [[V8HorizontalPickerLabel alloc] initWithFrame:labelFrame];
 
 	elementLabel.textAlignment   = UITextAlignmentCenter;
@@ -383,7 +383,7 @@
 	
 	elementLabel.normalStateColor   = self.textColor;
 	elementLabel.selectedStateColor = self.selectedTextColor;
-	elementLabel.selectedElement    = (currentSelectedIndex == index);
+	elementLabel.selectedElement    = (currentSelectedIndex == elementIndex);
 
 	return [elementLabel autorelease];
 }
@@ -456,13 +456,13 @@
 }
 
 // what is the left-most edge of the element at the given index?
-- (NSInteger)offsetForElementAtIndex:(NSInteger)index {
+- (NSInteger)offsetForElementAtIndex:(NSInteger)elementIndex {
 	NSInteger offset = 0;
-	if (index >= [elementWidths count]) {
+	if (elementIndex >= [elementWidths count]) {
 		return 0;
 	}
 
-	for (int i = 0; i < index; i++) {
+	for (int i = 0; i < elementIndex; i++) {
 		offset += [[elementWidths objectAtIndex:i] intValue];
 		offset += elementPadding;
 	}
@@ -470,8 +470,8 @@
 }
 
 // return the tag for an element at a given index
-- (NSInteger)tagForElementAtIndex:(NSInteger)index {
-	return (index + 1) * 10;
+- (NSInteger)tagForElementAtIndex:(NSInteger)elementIndex {
+	return (elementIndex + 1) * 10;
 }
 
 // return the index given an element's tag
@@ -480,21 +480,21 @@
 }
 
 // what is the center of the element at the given index?
-- (NSInteger)centerOfElementAtIndex:(NSInteger)index {
-	if (index >= [elementWidths count]) {
+- (NSInteger)centerOfElementAtIndex:(NSInteger)elementIndex {
+	if (elementIndex >= [elementWidths count]) {
 		return 0;
 	}
 	
-	NSInteger elementOffset = [self offsetForElementAtIndex:index];
-	NSInteger elementWidth  = [[elementWidths objectAtIndex:index] intValue] / 2;
+	NSInteger elementOffset = [self offsetForElementAtIndex:elementIndex];
+	NSInteger elementWidth  = [[elementWidths objectAtIndex:elementIndex] intValue] / 2;
 	return elementOffset + elementWidth;
 }
 
 // what is the frame for the element at the given index?
-- (CGRect)frameForElementAtIndex:(NSInteger)index {
-	return CGRectMake([self offsetForElementAtIndex:index],
+- (CGRect)frameForElementAtIndex:(NSInteger)elementIndex {
+	return CGRectMake([self offsetForElementAtIndex:elementIndex],
 					  0.0f,
-					  [[elementWidths objectAtIndex:index] intValue],
+					  [[elementWidths objectAtIndex:elementIndex] intValue],
 					  self.frame.size.height);
 }
 
