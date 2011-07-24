@@ -74,6 +74,7 @@
 }
 
 - (void)dealloc {
+    _scrollView.delegate = nil;
 	[_scrollView    release];
 	[elementWidths  release];
 	[elementFont    release];
